@@ -9,85 +9,114 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 
-class Expense(db.Model):
+class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    expense = db.Column(db.String(100), nullable=False)
+    transaction_type = db.Column(db.String(20), nullable=False)
+    category = db.Column(db.String(50), nullable=False)
     amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.String(20), nullable=False)
 
     def __repr__(self):
-        return f"<Expense {self.expense}>"
+        return f"<Transaction {self.id}>"
 
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+
+    transactions = Transaction.query.all()
+
+    total_income = sum(
+        t.amount for t in transactions
+        if t.transaction_type == "Income"
+    )
+
+    total_expense = sum(
+        t.amount for t in transactions
+        if t.transaction_type == "Expense"
+    )
+
+    balance = total_income - total_expense
+
+    return render_template(
+        "index.html",
+        total_income=total_income,
+        total_expense=total_expense,
+        balance=balance
+    )
 
 
-@app.route("/add-expense", methods=["GET", "POST"])
-def add_expense():
+@app.route("/add", methods=["GET", "POST"])
+def add():
 
     if request.method == "POST":
 
-        expense_name = request.form["expense_name"]
-        amount = request.form["amount"]
+        transaction_type = request.form["transaction_type"]
+        category = request.form["category"]
+        amount = float(request.form["amount"])
+        date = request.form["date"]
 
-        new_expense = Expense(
-            expense=expense_name,
-            amount=float(amount)
+        if amount <= 0:
+            return redirect(url_for("add"))
+
+        transaction = Transaction(
+            transaction_type=transaction_type,
+            category=category,
+            amount=amount,
+            date=date
         )
 
-        db.session.add(new_expense)
+        db.session.add(transaction)
         db.session.commit()
 
-        return redirect(url_for("view_expenses"))
+        return redirect(url_for("transactions"))
 
-    return render_template("add_expense.html")
+    return render_template("add_transaction.html")
 
 
-@app.route("/expenses")
-def view_expenses():
+@app.route("/transactions")
+def transactions():
 
-    expenses = Expense.query.all()
+    transactions = Transaction.query.order_by(Transaction.id.desc()).all()
 
-    total_amount = sum(expense.amount for expense in expenses)
     return render_template(
-    "expenses.html",
-    expenses=expenses,
-    total_amount=total_amount
-)
-
-
-
-@app.route("/delete/<int:id>")
-def delete(id):
-
-    expense = db.get_or_404(Expense, id)
-
-    db.session.delete(expense)
-
-    db.session.commit()
-
-    return redirect(url_for("view_expenses"))
+        "transactions.html",
+        transactions=transactions
+    )
 
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit(id):
 
-    expense = db.get_or_404(Expense, id)
+    transaction = db.get_or_404(Transaction, id)
 
     if request.method == "POST":
 
-        expense.expense = request.form["expense_name"]
-        expense.amount = float(request.form["amount"])
+        transaction.transaction_type = request.form["transaction_type"]
+        transaction.category = request.form["category"]
+        transaction.amount = float(request.form["amount"])
+        transaction.date = request.form["date"]
 
         db.session.commit()
 
-        return redirect(url_for("view_expenses"))
+        return redirect(url_for("transactions"))
 
     return render_template(
-        "edit_expense.html",
-        expense=expense
+        "edit_transaction.html",
+        transaction=transaction
     )
+
+
+@app.route("/delete/<int:id>")
+def delete(id):
+
+    transaction = db.get_or_404(Transaction, id)
+
+    db.session.delete(transaction)
+
+    db.session.commit()
+
+    return redirect(url_for("transactions"))
+
 
 if __name__ == "__main__":
 
