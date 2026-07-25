@@ -8,18 +8,15 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-expenses = []
 
 class Expense(db.Model):
-
     id = db.Column(db.Integer, primary_key=True)
-
     expense = db.Column(db.String(100), nullable=False)
-
     amount = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f"{self.expense}"
+        return f"<Expense {self.expense}>"
+
 
 @app.route("/")
 def home():
@@ -31,15 +28,16 @@ def add_expense():
 
     if request.method == "POST":
 
-        expense = request.form["expense_name"]
+        expense_name = request.form["expense_name"]
         amount = request.form["amount"]
 
-        expenses.append(
-            {
-                "expense": expense,
-                "amount": amount
-            }
+        new_expense = Expense(
+            expense=expense_name,
+            amount=float(amount)
         )
+
+        db.session.add(new_expense)
+        db.session.commit()
 
         return redirect(url_for("view_expenses"))
 
@@ -48,11 +46,46 @@ def add_expense():
 
 @app.route("/expenses")
 def view_expenses():
+
+    expenses = Expense.query.all()
+
     return render_template(
         "expenses.html",
         expenses=expenses
     )
 
+
+
+@app.route("/delete/<int:id>")
+def delete(id):
+
+    expense = db.get_or_404(Expense, id)
+
+    db.session.delete(expense)
+
+    db.session.commit()
+
+    return redirect(url_for("view_expenses"))
+
+
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+def edit(id):
+
+    expense = db.get_or_404(Expense, id)
+
+    if request.method == "POST":
+
+        expense.expense = request.form["expense_name"]
+        expense.amount = float(request.form["amount"])
+
+        db.session.commit()
+
+        return redirect(url_for("view_expenses"))
+
+    return render_template(
+        "edit_expense.html",
+        expense=expense
+    )
 
 if __name__ == "__main__":
 

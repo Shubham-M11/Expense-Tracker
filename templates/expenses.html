@@ -1,39 +1,49 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Expenses</title>
+    <title>View Expenses</title>
 </head>
 
 <body>
 
-<h1>All Expenses</h1>
+    <h1>All Expenses</h1>
 
-<table border="1">
+    <table border="1" cellpadding="10">
 
-<tr>
+        <tr>
+            <th>Expense</th>
+            <th>Amount</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
 
-<th>Expense</th>
-<th>Amount</th>
+        {% for expense in expenses %}
 
-</tr>
+        <tr>
 
-{% for expense in expenses %}
+            <td>{{ expense.expense }}</td>
 
-<tr>
+            <td>{{ expense.amount }}</td>
 
-<td>{{ expense.expense }}</td>
+            <td>
+                <a href="/edit/{{ expense.id }}">Edit</a>
+            </td>
 
-<td>{{ expense.amount }}</td>
+            <td>
+                <a href="/delete/{{ expense.id }}">Delete</a>
+            </td>
 
-</tr>
+        </tr>
 
-{% endfor %}
+        {% endfor %}
 
-</table>
+    </table>
 
-<br>
+    <br>
 
-<a href="/">Home</a>
+    <a href="/">Home</a>
 
 </body>
+
 </html>
