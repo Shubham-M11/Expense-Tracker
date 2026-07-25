@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expenses</title>
+</head>
+
+<body>
+
+<h1>All Expenses</h1>
+
+<table border="1">
+
+<tr>
+
+<th>Expense</th>
+<th>Amount</th>
+
+</tr>
+
+{% for expense in expenses %}
+
+<tr>
+
+<td>{{ expense.expense }}</td>
+
+<td>{{ expense.amount }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/">Home</a>
+
+</body>
+</html>
