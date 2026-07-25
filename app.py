@@ -49,10 +49,12 @@ def view_expenses():
 
     expenses = Expense.query.all()
 
+    total_amount = sum(expense.amount for expense in expenses)
     return render_template(
-        "expenses.html",
-        expenses=expenses
-    )
+    "expenses.html",
+    expenses=expenses,
+    total_amount=total_amount
+)
 
 
 
